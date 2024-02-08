@@ -13,7 +13,7 @@ interface User {
     age: number,
     roles: ['admin', 'user'],
     createdAt: Date,
-    isDeleated: boolean
+    isDeleted: boolean
 }
 
 interface Requests {
@@ -32,7 +32,7 @@ const userMock: User = {
     age: 343,
     roles: ["admin", "user"],
     createdAt: new Date(),
-    isDeleated: false
+    isDeleted: false
 }
 
 
@@ -59,24 +59,31 @@ type ErrorHandlerFunc = (error: any) => { status: HTTP_STATUS }
 type CompleteHandlerFunc = () => void
 
 
-interface Obs {
+interface Handlers {
     next: RequestHandlerFunc,
     error: ErrorHandlerFunc,
     complete: CompleteHandlerFunc
 }
 
 class Observer {
-    private handlers: Obs;
+    private handlers: Handlers;
     private isUnsubscribed: boolean;
-    _unsubscribe: any;
+    _unsubscribe: Function | undefined;
 
-    constructor(handlers: Obs) {
+    set setUnsubscribe(func: Function) {
+        this._unsubscribe = func;
+    }
+
+
+    constructor(handlers: Handlers) {
         this.handlers = handlers
         this.isUnsubscribed = false
     }
 
     next(value: Requests) {
-        this.handlers.next(value);
+        if (this.handlers.next && !this.isUnsubscribed) {
+            this.handlers.next(value);
+        }
     }
 
     error(error: string) {
@@ -89,7 +96,9 @@ class Observer {
 
     complete() {
         if (!this.isUnsubscribed) {
-            this.handlers.complete();
+            if (this.handlers.complete) {
+                this.handlers.complete();
+            }
 
             this.unsubscribe();
         }
@@ -123,10 +132,10 @@ class Observable {
         });
     }
 
-    subscribe(obs: Obs) {
+    subscribe(obs: Handlers) {
         const observer = new Observer(obs);
 
-        observer._unsubscribe = this._subscribe(observer);
+        observer.setUnsubscribe = this._subscribe(observer);
 
         return ({
             unsubscribe() {
