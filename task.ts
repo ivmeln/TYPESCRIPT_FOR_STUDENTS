@@ -54,8 +54,8 @@ const requestsMock: Requests[] = [
     }
 ];
 
-type RequestHandlerFunc = (request: any) => { status: HTTP_STATUS }
-type ErrorHandlerFunc = (error: any) => { status: HTTP_STATUS }
+type RequestHandlerFunc = (request: Requests) => { status: HTTP_STATUS }
+type ErrorHandlerFunc = (error: string) => { status: HTTP_STATUS }
 type CompleteHandlerFunc = () => void
 
 
